@@ -1,99 +1,101 @@
-/*
- * ================================================================
- * MAIN CLASS - UseCase3InventorySetup
- * ================================================================
+/**
+ * ============================================================
+ * MAIN CLASS - UseCase4RoomSearch
+ * ============================================================
  *
- * Use Case 3: Centralized Room Inventory Management
+ * Use Case 4: Room Search & Availability Check
  *
  * Description:
- * This class demonstrates how room availability
- * is managed using a centralized inventory.
+ * This class demonstrates how guests
+ * can view available rooms without
+ * modifying inventory data.
  *
- * Room objects are used to retrieve pricing
- * and room characteristics.
+ * The system enforces read-only access
+ * by design and usage discipline.
  *
- * No booking or search logic is introduced here.
- *
- * @version 3.1
+ * @version 4.0
  */
 
-import java.util.HashMap;
+import java.util.*;
 
-// Abstract Room class
-abstract class Room {
-    protected int beds;
-    protected int size; // sqft
-    protected double price;
+class Room {
+    private String type;
+    private int beds;
+    private int size;
+    private double price;
 
-    public Room(int beds, int size, double price) {
+    public Room(String type, int beds, int size, double price) {
+        this.type = type;
         this.beds = beds;
         this.size = size;
         this.price = price;
     }
 
-    public abstract String getRoomType();
+    public String getType() {
+        return type;
+    }
 
-    public void displayDetails() {
-        System.out.println(getRoomType() + ":");
-        System.out.println("Beds: " + beds);
-        System.out.println("Size: " + size + " sqft");
-        System.out.println("Price per night: " + price);
+    public int getBeds() {
+        return beds;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public double getPrice() {
+        return price;
     }
 }
 
-// Single Room
-class SingleRoom extends Room {
-    public SingleRoom() {
-        super(1, 250, 1500.0);
+class Inventory {
+    private Map<String, Integer> availability;
+
+    public Inventory() {
+        availability = new HashMap<>();
+
+        // Initial availability (read-only for search)
+        availability.put("Single", 5);
+        availability.put("Double", 3);
+        availability.put("Suite", 2);
     }
 
-    public String getRoomType() {
-        return "Single Room";
-    }
-}
-
-// Double Room
-class DoubleRoom extends Room {
-    public DoubleRoom() {
-        super(2, 400, 2500.0);
+    public int getAvailableCount(String roomType) {
+        return availability.getOrDefault(roomType, 0);
     }
 
-    public String getRoomType() {
-        return "Double Room";
-    }
-}
-
-// Suite Room
-class SuiteRoom extends Room {
-    public SuiteRoom() {
-        super(3, 750, 5000.0);
-    }
-
-    public String getRoomType() {
-        return "Suite Room";
+    public Set<String> getRoomTypes() {
+        return availability.keySet();
     }
 }
 
-// Centralized Inventory Class
-class RoomInventory {
+class SearchService {
+    private Inventory inventory;
+    private Map<String, Room> roomData;
 
-    private HashMap<String, Integer> inventory;
-
-    public RoomInventory() {
-        inventory = new HashMap<>();
-
-        // Initialize availability
-        inventory.put("Single Room", 5);
-        inventory.put("Double Room", 3);
-        inventory.put("Suite Room", 2);
+    public SearchService(Inventory inventory, Map<String, Room> roomData) {
+        this.inventory = inventory;
+        this.roomData = roomData;
     }
 
-    public int getAvailability(String roomType) {
-        return inventory.getOrDefault(roomType, 0);
-    }
+    public void displayAvailableRooms() {
+        System.out.println("Room Search\n");
 
-    public void updateAvailability(String roomType, int count) {
-        inventory.put(roomType, count);
+        for (String type : inventory.getRoomTypes()) {
+            int available = inventory.getAvailableCount(type);
+
+            // Filter unavailable rooms
+            if (available > 0) {
+                Room room = roomData.get(type);
+
+                System.out.println(type + " Room:");
+                System.out.println("Beds: " + room.getBeds());
+                System.out.println("Size: " + room.getSize() + " sqft");
+                System.out.println("Price per night: " + room.getPrice());
+                System.out.println("Available: " + available);
+                System.out.println();
+            }
+        }
     }
 }
 
@@ -101,33 +103,24 @@ public class BookMyStayApp {
 
     /**
      * Application entry point.
+     *
      * @param args Command-line arguments
      */
     public static void main(String[] args) {
 
-        // Create room objects
-        Room single = new SingleRoom();
-        Room doubleRoom = new DoubleRoom();
-        Room suite = new SuiteRoom();
+        // Step 1: Create room domain objects
+        Map<String, Room> roomData = new HashMap<>();
+        roomData.put("Single", new Room("Single", 1, 250, 1500.0));
+        roomData.put("Double", new Room("Double", 2, 400, 2500.0));
+        roomData.put("Suite", new Room("Suite", 3, 750, 5000.0));
 
-        // Initialize inventory
-        RoomInventory inventory = new RoomInventory();
+        // Step 2: Create inventory (state holder)
+        Inventory inventory = new Inventory();
 
-        System.out.println("Hotel Room Inventory Status\n");
+        // Step 3: Create search service (read-only access)
+        SearchService searchService = new SearchService(inventory, roomData);
 
-        // Single Room
-        single.displayDetails();
-        System.out.println("Available Rooms: " +
-                inventory.getAvailability(single.getRoomType()) + "\n");
-
-        // Double Room
-        doubleRoom.displayDetails();
-        System.out.println("Available Rooms: " +
-                inventory.getAvailability(doubleRoom.getRoomType()) + "\n");
-
-        // Suite Room
-        suite.displayDetails();
-        System.out.println("Available Rooms: " +
-                inventory.getAvailability(suite.getRoomType()));
+        // Step 4: Guest searches for rooms
+        searchService.displayAvailableRooms();
     }
 }
