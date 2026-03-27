@@ -1,24 +1,28 @@
 /*
  * ================================================================
- * MAIN CLASS - UseCase2RoomInitialization
+ * MAIN CLASS - UseCase3InventorySetup
  * ================================================================
  *
- * Use Case 2: Basic Room Types & Static Availability
+ * Use Case 3: Centralized Room Inventory Management
  *
  * Description:
- * This class demonstrates room initialization
- * using domain models before introducing
- * centralized inventory management.
+ * This class demonstrates how room availability
+ * is managed using a centralized inventory.
  *
- * Availability is represented using
- * simple variables to highlight limitations.
+ * Room objects are used to retrieve pricing
+ * and room characteristics.
  *
- * @version 2.1
+ * No booking or search logic is introduced here.
+ *
+ * @version 3.1
  */
 
+import java.util.HashMap;
+
+// Abstract Room class
 abstract class Room {
     protected int beds;
-    protected int size; // in sqft
+    protected int size; // sqft
     protected double price;
 
     public Room(int beds, int size, double price) {
@@ -70,40 +74,33 @@ class SuiteRoom extends Room {
     }
 }
 
-/**
- * ============================================================
- * MAIN CLASS - UseCase1HotelBookingApp
- * ============================================================
- *
- * Use Case 1: Application Entry & Welcome Message
- *
- * Description:
- * This class represents the entry point of the
- * Hotel Booking Management System.
- *
- * At this stage, the application:
- * - Starts execution from the main() method
- * - Displays a welcome message to the user
- * - Confirms that the system has started successfully
- *
- * No business logic, data structures, or user input
- * is implemented in this use case.
- *
- * The goal is to establish a clear and predictable
- * application startup point.
- *
- * @author Developer
- * @version 1.0
- */
+// Centralized Inventory Class
+class RoomInventory {
+
+    private HashMap<String, Integer> inventory;
+
+    public RoomInventory() {
+        inventory = new HashMap<>();
+
+        // Initialize availability
+        inventory.put("Single Room", 5);
+        inventory.put("Double Room", 3);
+        inventory.put("Suite Room", 2);
+    }
+
+    public int getAvailability(String roomType) {
+        return inventory.getOrDefault(roomType, 0);
+    }
+
+    public void updateAvailability(String roomType, int count) {
+        inventory.put(roomType, count);
+    }
+}
 
 public class BookMyStayApp {
 
     /**
      * Application entry point.
-     *
-     * This method is the first method executed
-     * when the program is launched by the JVM.
-     *
      * @param args Command-line arguments
      */
     public static void main(String[] args) {
@@ -113,27 +110,24 @@ public class BookMyStayApp {
         Room doubleRoom = new DoubleRoom();
         Room suite = new SuiteRoom();
 
-        // Static availability
-        int singleAvailable = 5;
-        int doubleAvailable = 3;
-        int suiteAvailable = 2;
+        // Initialize inventory
+        RoomInventory inventory = new RoomInventory();
 
-        System.out.println("Hotel Room Initialization\n");
+        System.out.println("Hotel Room Inventory Status\n");
 
         // Single Room
         single.displayDetails();
-        System.out.println("Available: " + singleAvailable + "\n");
+        System.out.println("Available Rooms: " +
+                inventory.getAvailability(single.getRoomType()) + "\n");
 
         // Double Room
         doubleRoom.displayDetails();
-        System.out.println("Available: " + doubleAvailable + "\n");
+        System.out.println("Available Rooms: " +
+                inventory.getAvailability(doubleRoom.getRoomType()) + "\n");
 
         // Suite Room
         suite.displayDetails();
-        System.out.println("Available: " + suiteAvailable);
-    }
-}
-        System.out.println("Welcome to the Hotel Booking Management System");
-        System.out.println("System initialized successfully.");
+        System.out.println("Available Rooms: " +
+                inventory.getAvailability(suite.getRoomType()));
     }
 }
